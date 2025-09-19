@@ -679,7 +679,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
         if (delta_count >= 2) {
             tim4_initialized = 0;
             HAL_TIM_Base_Stop_IT(&htim3);
-             HAL_TIM_Base_Start_IT(&htim4);
+            // HAL_TIM_Base_Start_IT(&htim4);
             Tim3_raw = raw;
              Left_flag = 0;
              Right_flag = 0;
@@ -712,17 +712,17 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
         HAL_UART_Transmit(&huart3, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
 
         if (correcting_direction == 0) {
-            if (diff >= 2.5f) { // 오른쪽으로 휨
+            if (diff >= 1.2f) { // 오른쪽으로 휨
                 sprintf((char *)serialBuf, "6"); // 왼쪽 회전 시작
                 HAL_UART_Transmit(&huart6, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
                 correcting_direction = 1;
-            } else if (diff <= -2.5f) { // 왼쪽으로 휨
+            } else if (diff <= -1.2f) { // 왼쪽으로 휨
                 sprintf((char *)serialBuf, "5"); // 오른쪽 회전 시작
                 HAL_UART_Transmit(&huart6, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
                 correcting_direction = 2;
             }
         } else if (correcting_direction == 1) { // 오른쪽 회전 중
-            if (diff <= 2.0f) {
+            if (diff <= 0.5f) {
                 if (Forward_flag == 1) {
                     sprintf((char *)serialBuf, "7"); // 다음 명령(전진)
                     HAL_UART_Transmit(&huart6, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
@@ -734,7 +734,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
                 }
             }
         } else if (correcting_direction == 2) { // 왼쪽 회전 중
-            if (diff >= -2.0f) {
+            if (diff >= -0.5f) {
                 if (Forward_flag == 1) {
                     sprintf((char *)serialBuf, "7"); // 다음 명령(전진)
                     HAL_UART_Transmit(&huart6, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);

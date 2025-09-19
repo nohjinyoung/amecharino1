@@ -164,14 +164,15 @@ int main(void)
   // Configure the sensor for high accuracy and speed in 20 cm.
   startContinuous(20);
 
-  sprintf(msgBuffer, "start");
-  HAL_UART_Transmit(&huart3, (uint8_t*)msgBuffer, strlen(msgBuffer), 50);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1) {
-
+//      distancestr = readRangeSingleMillimeters(&distanceStr);
+//      sprintf(msgBuffer, "%d\n\r", distancestr);
+//      HAL_UART_Transmit(&huart3, (uint8_t*)msgBuffer, strlen(msgBuffer), HAL_MAX_DELAY);
+//      HAL_Delay(20);
     // mecanum_drive(0.0f, 0.0f, 20.0f);
 
     if (forward_flag == 1) {
@@ -234,7 +235,7 @@ int main(void)
       distancestr = readRangeSingleMillimeters(&distanceStr);
       HAL_Delay(20);
 
-      if (distancestr < 150) {
+      if (distancestr < 120) {
         Stop();
         Linear_Stop();
 
@@ -246,7 +247,7 @@ int main(void)
           PCA9685_SetServoAngle(1, 125 + i); // 늘어나기
           PCA9685_SetServoAngle(2, 110 + i); // 늘어나기
           PCA9685_SetServoAngle(3, 113 - i); // 줄어들기
-          HAL_Delay(11);
+          HAL_Delay(10);
         }
         servo_open = 0;
 
@@ -293,7 +294,7 @@ int main(void)
         PCA9685_SetServoAngle(1, 225 - i); // 늘어나기
         PCA9685_SetServoAngle(2, 210 - i); // 늘어나기
         PCA9685_SetServoAngle(3,  13 + i); // 줄어들기
-        HAL_Delay(11);
+        HAL_Delay(10);
       }
 
       HAL_Delay(1000);
@@ -306,7 +307,7 @@ int main(void)
         PCA9685_SetServoAngle(1, 125 + i); // 늘어나기
         PCA9685_SetServoAngle(2, 110 + i); // 늘어나기
         PCA9685_SetServoAngle(3, 113 - i); // 줄어들기
-        HAL_Delay(11);
+        HAL_Delay(10);
       }
       servo_open = 0;
       HAL_Delay(1000);
@@ -387,10 +388,12 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
         backward_flag   = 0;
         right_turn_flag = 0;
         left_turn_flag  = 0;
-        // sprintf((char *)serialBuf, "5");
-        // HAL_UART_Transmit(&huart6, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
+
         mecanum_drive(-50.0f, 0.0f, 0.0f);  // 속도 유지
       }
+
+      sprintf((char *)serialBuf, "5");
+      HAL_UART_Transmit(&huart6, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
 
     } else if (rx_data_3 == '2') {
       if (Lifting_check == 0) {
@@ -405,10 +408,12 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
         backward_flag   = 0;
         right_turn_flag = 0;
         left_turn_flag  = 0;
-        // sprintf((char *)serialBuf, "6");
-        // HAL_UART_Transmit(&huart6, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
+
         mecanum_drive(50.0f, 0.0f, 0.0f);  // 속도 유지
       }
+
+      sprintf((char *)serialBuf, "6");
+      HAL_UART_Transmit(&huart6, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
       // sprintf((char *)serialBuf, "6"); //Tim4 start
       // HAL_UART_Transmit(&huart7, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
 
@@ -478,6 +483,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
       left_turn_flag  = 0;
       vx_value        = 0.0f;
 
+      sprintf((char*)serialBuf, "7");
+      HAL_UART_Transmit(&huart6, serialBuf, strlen((char*)serialBuf), HAL_MAX_DELAY);
       Motor_Init();
       Linear_Stop();
       mecanum_drive(0.0f, 0.0f, 0.0f);
