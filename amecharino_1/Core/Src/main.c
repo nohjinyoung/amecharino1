@@ -73,6 +73,7 @@ uint8_t  left_turn_flag  = 0;
 uint8_t  distance;
 uint8_t  distancestr;
 uint8_t  start = 0;
+uint8_t ready = 0;
 float    vx_value = 0.0f;
 
 volatile uint8_t Linear_flag      = 0;
@@ -228,14 +229,22 @@ int main(void)
       }
 
     } else if (Linear_flag == 1) {
+
+	  sprintf((char*)serialBuf, "l");  // L
+  	  HAL_UART_Transmit(&huart3, serialBuf, strlen((char*)serialBuf), HAL_MAX_DELAY);
+
       Stop();
       Linear_Forward();
 
       distance    = VL6180X_ReadRange();
       distancestr = readRangeSingleMillimeters(&distanceStr);
+      if (distancestr > 130) {   // 20cm 이상 멀어지면 준비 상태
+          ready = 1;
+      }
       HAL_Delay(20);
 
-      if (distancestr < 120) {
+      if (ready && distancestr < 120) {
+    	ready = 0;
         Stop();
         Linear_Stop();
 

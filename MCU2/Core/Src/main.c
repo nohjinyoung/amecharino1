@@ -18,20 +18,30 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "i2c.h"
 #include "spi.h"
+#include "usart.h"
 #include "gpio.h"
-#include "rc522.h"
-#include <string.h>
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-  uint8_t status;
-  uint8_t str[MAX_LEN]; // Max_LEN = 16
-  uint8_t sNum[5];
+
+#include "rc522.h"
+#include <string.h>
+#define LCD_ADDR (0x27 << 1)
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+ uint8_t status;
+ uint8_t str[MAX_LEN]; // Max_LEN = 16
+ uint8_t sNum[5];
 
+ extern void I2C_Scan(void);
+ void LCD_Init(uint8_t lcd_addr);
+ void LCD_SendCommand(uint8_t lcd_addr, uint8_t cmd);
+ void LCD_SendString(uint8_t lcd_addr, char *str);
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -65,6 +75,8 @@ void SystemClock_Config(void);
   * @brief  The application entry point.
   * @retval int
   */
+
+
 int main(void)
 {
 
@@ -91,32 +103,53 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_SPI1_Init();
+  MX_I2C1_Init();
+  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
-  MFRC522_Init();
+  I2C_Scan();
+   LCD_Init(LCD_ADDR);
+//  MFRC522_Init();
+ // HD44780_Init(2);
+
+
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  status = MFRC522_Request(PICC_REQIDL, str);
-	    status = MFRC522_Anticoll(str);
-	    memcpy(sNum, str, 5);
-	    HAL_Delay(100);
-	    // if((str[0]==115) && (str[1]==93) && (str[2]==75) && (str[3]==22) && (str[4]==115) )
-	    // {
-	      // HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,0);
-	      // HAL_Delay(100);
-	      // }
-	    // else if((str[0]==199) && (str[1]==102) && (str[2]==209) && (str[3]==215) && (str[4]==167) )
-	      // {
-	      // HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,0);
-	      // HAL_Delay(2000);
-	    // }
-	    // else
-	    // {
-	      // HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,1);
-	    // }
+
+	  LCD_SendCommand(LCD_ADDR, 0b10000000);
+	   LCD_SendString(LCD_ADDR, "Hello");
+	   LCD_SendCommand(LCD_ADDR, 0b11000000);
+	   LCD_SendString(LCD_ADDR, "World");
+	   HAL_Delay(100);
+//	    status = MFRC522_Request(PICC_REQIDL, str);
+//	    status = MFRC522_Anticoll(str);
+//	    memcpy(sNum, str, 5);
+//	    HAL_Delay(100);
+//	     if((str[0]==115) && (str[1]==93) && (str[2]==75) && (str[3]==22) && (str[4]==115) )
+//	     {
+//	       HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,0);
+//	       HAL_Delay(100);
+//	       }
+//	     else if((str[0]==199) && (str[1]==102) && (str[2]==209) && (s	tr[3]==215) && (str[4]==167) )
+//	       {
+//	       HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,0);
+//	       HAL_Delay(2000);
+//	     }
+//	     else
+//	     {
+//	       HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,1);
+//	     }
+
+	    HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+	    HAL_Delay(1000);
+	    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13,GPIO_PIN_RESET); //3 앞쪽 우
+		HAL_Delay(1000);
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -136,12 +169,13 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI_DIV2;
-  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL16;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
