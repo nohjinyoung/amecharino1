@@ -529,10 +529,12 @@ uchar MFRC522_Write(uchar blockAddr, uchar *writeData)
  */
 void MFRC522_Halt(void)
 {
-	uint8_t unLen;
+	uint unLen;
 	uchar buff[4];
 
 	buff[0] = PICC_HALT;
 	buff[1] = 0;
 	CalulateCRC(buff, 2, &buff[2]);
+
+	MFRC522_ToCard(PCD_TRANSCEIVE, buff, 4, buff,&unLen);
 }

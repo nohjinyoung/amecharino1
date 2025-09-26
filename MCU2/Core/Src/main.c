@@ -18,18 +18,21 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "adc.h"
 #include "i2c.h"
 #include "spi.h"
-#include "usart.h"
+#include "tim.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
 #include "rc522.h"
+#include <stdio.h>
 #include <string.h>
-#define LCD_ADDR (0x27 << 1)
-
+#include "Anglas_LCD_I2C.h"
+#include "LED_Display.h"
+#include "step.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -38,10 +41,9 @@
  uint8_t str[MAX_LEN]; // Max_LEN = 16
  uint8_t sNum[5];
 
- extern void I2C_Scan(void);
- void LCD_Init(uint8_t lcd_addr);
- void LCD_SendCommand(uint8_t lcd_addr, uint8_t cmd);
- void LCD_SendString(uint8_t lcd_addr, char *str);
+
+
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -57,7 +59,23 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+ uint32_t adcValue = 0;
+ char buff[16];
+ typedef struct {
+     GPIO_TypeDef* Port;
+     uint16_t Pin;
+ } Led_t;
 
+ Led_t LEDs[8] = {
+     {led_1_GPIO_Port, led_1_Pin},
+     {led_2_GPIO_Port, led_2_Pin},
+     {led_3_GPIO_Port, led_3_Pin},
+     {led_4_GPIO_Port, led_4_Pin},
+     {led_5_GPIO_Port, led_5_Pin},
+     {led_6_GPIO_Port, led_6_Pin},
+     {led_7_GPIO_Port, led_7_Pin},
+     {led_8_GPIO_Port, led_8_Pin}
+ };
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -75,8 +93,6 @@ void SystemClock_Config(void);
   * @brief  The application entry point.
   * @retval int
   */
-
-
 int main(void)
 {
 
@@ -104,16 +120,35 @@ int main(void)
   MX_GPIO_Init();
   MX_SPI1_Init();
   MX_I2C1_Init();
-  MX_USART3_UART_Init();
+  MX_ADC1_Init();
+  MX_TIM2_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
-  I2C_Scan();
-   LCD_Init(LCD_ADDR);
+//  tm1637Init();
+//  tm1637SetBrightness(8);
+//  tm1637DisplayDecimal(1234, 1);
+
+
+    // Display the value "1234" and turn on the `:` that is between digits 2 and 3.
+
+  ///////////////////////////////////////////////////////////////
+//  HAL_ADC_Start_IT(&hadc1);
+//  LCD_I2C_Init();
+//
+//  LCD_I2C_Clear();
+//  LCD_I2C_WriteText(1, 1, "start");
+//  HAL_Delay(1000);
+//
+//  int8_t coin = 0;
 //  MFRC522_Init();
- // HD44780_Init(2);
-
-
-
-
+  /////////////////////////////////////////////////////////////////
+  HAL_TIM_Base_Start(&htim2);
+//
+//  stepCV(256, 1000);  // 반바퀴, 스텝당 2ms (안정적)
+//  HAL_Delay(10);
+//  stepCCV(128, 1000);  // 반바퀴, 스텝당 2ms (안정적)
+  ///////////////////////////////////////////////////////////////////
+//  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -121,21 +156,49 @@ int main(void)
   while (1)
   {
 
-	  LCD_SendCommand(LCD_ADDR, 0b10000000);
-	   LCD_SendString(LCD_ADDR, "Hello");
-	   LCD_SendCommand(LCD_ADDR, 0b11000000);
-	   LCD_SendString(LCD_ADDR, "World");
-	   HAL_Delay(100);
+//	  for (int i=0; i<=360; i+=5) {
+//	      Stepper_rotate_absolute(5, 10, 0); // CW 1도
+//	      HAL_Delay(10);
+//	  }
+//	  for (int i=0; i<=360; i+=5) {
+//	      Stepper_rotate_absolute(5, 10, 1); // CCW 1도
+//	      HAL_Delay(10);
+//	  }
+/////////////////////////////////////////////////////////////////////////
+//	  	  HAL_ADC_Start(&hadc1);
+//	  	if (HAL_ADC_PollForConversion(&hadc1, 10) == HAL_OK) {
+//	  		adcValue = HAL_ADC_GetValue(&hadc1);   // 최신 변환 값 읽기
+//	  	}
+//
+//	  int level = (adcValue * 8) / 4096;
+//	  for (int i = 0; i < 8; i++) {
+//			  if (i < level) {
+//				  HAL_GPIO_WritePin(LEDs[i].Port, LEDs[i].Pin, GPIO_PIN_SET);
+//
+//			  } else {
+//				  HAL_GPIO_WritePin(LEDs[i].Port, LEDs[i].Pin, GPIO_PIN_RESET);
+//
+//			  }
+//		  }
+//
+//		  HAL_Delay(50); // 깜박임 방지
+	  //////////////////////////////////////////////////////////////////////////////////////////////////
+//	  coin++;
+//	  sprintf(buff, "coin: %d", coin);
+//	  LCD_I2C_Clear();
+//	  LCD_I2C_WriteText(1, 1, buff);
+//	  HAL_Delay(1000);
+////////////////////////////////////////////////////////////////////////////////////
 //	    status = MFRC522_Request(PICC_REQIDL, str);
 //	    status = MFRC522_Anticoll(str);
 //	    memcpy(sNum, str, 5);
 //	    HAL_Delay(100);
-//	     if((str[0]==115) && (str[1]==93) && (str[2]==75) && (str[3]==22) && (str[4]==115) )
+//	     if((str[0]==179) && (str[1]==158) && (str[2]==54) && (str[3]==250))
 //	     {
 //	       HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,0);
 //	       HAL_Delay(100);
 //	       }
-//	     else if((str[0]==199) && (str[1]==102) && (str[2]==209) && (s	tr[3]==215) && (str[4]==167) )
+//	     else if((str[0]==83) && (str[1]==136) && (str[2]==27) && (str[3]==42))
 //	       {
 //	       HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,0);
 //	       HAL_Delay(2000);
@@ -144,11 +207,26 @@ int main(void)
 //	     {
 //	       HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,1);
 //	     }
+///////////////////////////////////////////////////////////////////////////////
 
-	    HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
-	    HAL_Delay(1000);
-	    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13,GPIO_PIN_RESET); //3 앞쪽 우
-		HAL_Delay(1000);
+//
+//	  if(coin == 5)
+//	  {
+//	      HAL_GPIO_WritePin(led_1_GPIO_Port,led_1_Pin, 1);
+//	      HAL_Delay(1000);
+//	      HAL_GPIO_WritePin(led_2_GPIO_Port,led_2_Pin, 1);
+//	      HAL_Delay(1000);
+//	      HAL_GPIO_WritePin(led_3_GPIO_Port,led_3_Pin, 1);
+//	      HAL_Delay(1000);
+//	      HAL_GPIO_WritePin(led_4_GPIO_Port,led_4_Pin, 1);
+//	      HAL_Delay(1000);
+//	      HAL_GPIO_WritePin(led_5_GPIO_Port,led_5_Pin, 1);
+//	      HAL_Delay(1000);
+//	      HAL_GPIO_WritePin(led_6_GPIO_Port,led_6_Pin, 1);
+//	      HAL_Delay(1000);
+//	      HAL_GPIO_WritePin(led_7_GPIO_Port,led_7_Pin, 1);
+//	      HAL_Delay(1000);
+//	  }
 
     /* USER CODE END WHILE */
 
@@ -165,6 +243,7 @@ void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
@@ -191,6 +270,12 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
+  PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV4;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
   }

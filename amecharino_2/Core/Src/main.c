@@ -672,7 +672,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
         HAL_UART_Transmit(&huart3, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
 
         // 멈춤 조건: 방향 상관없이 90도 이상 회전 시
-        if (delta >= 89.6f) {
+        if (delta >= 89.1f) {
             delta_count++;
         }
 

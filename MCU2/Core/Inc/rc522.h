@@ -11,7 +11,6 @@
 #include "spi.h"
 #define	uchar	unsigned char
 #define	uint	unsigned int
-//extern SPI_HandleTypeDef hspi1;
 
 //Maximum length of the array
 #define MAX_LEN 16

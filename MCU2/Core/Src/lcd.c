@@ -10,7 +10,6 @@
 #define LCD_DELAY_MS 5
 
 extern I2C_HandleTypeDef hi2c1;
-
 extern UART_HandleTypeDef huart3;
 
 
