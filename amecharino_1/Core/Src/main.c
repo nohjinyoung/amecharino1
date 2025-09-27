@@ -40,15 +40,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define TRUE  1
-#define FALSE 0
-#define M_PI  3.14159265358979323846
 
-static inline float clampf(float v, float lo, float hi) {
-  if (v < lo) return lo;
-  if (v > hi) return hi;
-  return v;
-}
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -81,10 +73,6 @@ volatile uint8_t Linear_num       = 0;
 volatile uint8_t Linear_back_flag = 0;
 volatile uint8_t Linear_back_num  = 0;
 
-float vx0  = 0.25f;
-float kv   = 1.2f;
-float vmin = 0.08f;
-float Ky   = 0.8f;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -260,7 +248,6 @@ int main(void)
         }
         servo_open = 0;
 
-        HAL_Delay(1000);
         sprintf((char*)serialBuf, "a\r\n");
         HAL_UART_Transmit(&huart3, serialBuf, strlen((char*)serialBuf), HAL_MAX_DELAY);
         HAL_Delay(20);
@@ -429,7 +416,18 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
       HAL_UART_Transmit(&huart6, serialBuf, strlen((char*)serialBuf), HAL_MAX_DELAY);
 
       if (Lifting_check == 1) {
- 	  mecanum_drive(0.0f, -70.0f, 0.0f);  // 속도 유지
+		  	  HAL_GPIO_WritePin(GPIOF, GPIO_PIN_8,GPIO_PIN_RESET); //1 뒤쪽 우
+    	  	HAL_GPIO_WritePin(GPIOF, GPIO_PIN_7,GPIO_PIN_RESET);// 2 뒤쪽 좌
+    	  	HAL_GPIO_WritePin(GPIOF, GPIO_PIN_9,GPIO_PIN_RESET); //3 앞쪽 우
+    	  	HAL_GPIO_WritePin(GPIOG, GPIO_PIN_1,GPIO_PIN_RESET); //4 앞쪽 좌
+    	  	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+    	  	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
+    	  	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
+    	  	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
+    	  	TIM2->CCR1 = 30;
+    	  	TIM2->CCR2 = 30;
+    	  	TIM2->CCR3 = 25;
+    	  	TIM2->CCR4 = 25;
 
        } else {
          vx_value = -50.0f;
@@ -447,7 +445,19 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
       HAL_UART_Transmit(&huart6, serialBuf, strlen((char*)serialBuf), HAL_MAX_DELAY);
 
       if (Lifting_check == 1) {
-	  mecanum_drive(0.0f, 70.0f, 0.0f);  // 속도 유지
+//	  mecanum_drive(0.0f, 70.0f, 0.0f);  // 속도 유지
+    	  HAL_GPIO_WritePin(GPIOF, GPIO_PIN_8,GPIO_PIN_SET); //1 뒤쪽 우
+        	  	HAL_GPIO_WritePin(GPIOF, GPIO_PIN_7,GPIO_PIN_SET);// 2 뒤쪽 좌
+        	  	HAL_GPIO_WritePin(GPIOF, GPIO_PIN_9,GPIO_PIN_SET); //3 앞쪽 우
+        	  	HAL_GPIO_WritePin(GPIOG, GPIO_PIN_1,GPIO_PIN_SET); //4 앞쪽 좌
+        	  	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+        	  	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
+        	  	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
+        	  	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
+        	  	TIM2->CCR1 = 25;
+        	  	TIM2->CCR2 = 25;
+        	  	TIM2->CCR3 = 30;
+        	  	TIM2->CCR4 = 30;
 
       } else {
         vx_value = 50.0f;
@@ -458,10 +468,18 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
       }
 
     } else if (rx_data_3 == '5') {
-      Left();
+        forward_flag    = 0;
+        backward_flag   = 0;
+        right_turn_flag = 0;
+        left_turn_flag  = 0;
+        Left();
 
     } else if (rx_data_3 == '6') {
-      Right();
+        forward_flag    = 0;
+        backward_flag   = 0;
+        right_turn_flag = 0;
+        left_turn_flag  = 0;
+        Right();
 
     } else if (rx_data_3 == '7') {
       backward_flag = 1;

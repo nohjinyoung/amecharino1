@@ -85,7 +85,8 @@ float Tim4_raw = 0.0f;
 uint8_t delta_count = 0;
 uint8_t correcting_direction = 0;
 uint8_t tim4_initialized = 0;
-
+uint8_t stop_sent = 0;
+uint8_t  Lifting_check = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -200,7 +201,7 @@ int main(void)
 	      HAL_UART_Transmit(&huart3, (uint8_t*) msgBuffer, strlen(msgBuffer), 50);
 	      HAL_Delay(20);
 
-	      if (distance < 130) {
+	      if (distance < 180) {
 	          IR_flag = 0;
 	          sprintf((char *)serialBuf, "9");
 	          HAL_UART_Transmit(&huart6, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
@@ -220,6 +221,8 @@ int main(void)
 	      }
 
 	      Servo_open = 0;
+	      Lifting_check = 1;
+
 
 
 	  }
@@ -236,6 +239,7 @@ int main(void)
 	      }
 
 	      Servo_close = 0;
+	      Lifting_check = 0;
 
 
 
@@ -660,6 +664,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
     if (htim->Instance == TIM3)	//회전 각도 값 받아오기
     {
+
         bno055_vector_t v = bno055_getVectorEuler();
         raw_3 = v.x - heading;
 
@@ -671,21 +676,26 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
         delta_3 = fabsf(raw_3);
 
-        sprintf((char *)serialBuf, "heading = %.2f, v.x = %.2f, delta = %.2f\r\n", heading, v.x, delta_3);
-        HAL_UART_Transmit(&huart3, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
+//        sprintf((char *)serialBuf, "heading = %.2f, v.x = %.2f, delta = %.2f\r\n", heading, v.x, delta_3);
+//        HAL_UART_Transmit(&huart3, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
 
         // 멈춤 조건: 방향 상관없이 90도 이상 회전 시
-        if (delta_3 >= 89.1f) {
+        if ((delta_3 >= 89.1f &&  Lifting_check == 0) || (delta_3 >= 88.5f &&  Lifting_check == 1)) {
             delta_count++;
         }
 
         if (delta_count >= 2) {
+        	if(stop_sent == 0)
+        	{
+				sprintf((char *)serialBuf, "4");	//동작 정지 신
+				HAL_UART_Transmit(&huart6, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
+        	}
+
             HAL_TIM_Base_Stop_IT(&htim3);
              Left_flag = 0;
              Right_flag = 0;
 
-            sprintf((char *)serialBuf, "4");	//동작 정지 신
-            HAL_UART_Transmit(&huart6, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
+             stop_sent = 1;
 
             delta_count = 0;
         }
@@ -757,6 +767,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 
         else if (rx_data_6 == '3') { // 레프트턴
         	HAL_TIM_Base_Stop_IT(&htim4);
+        	stop_sent = 0;
             Left_flag = 1;
 			Right_flag = 0;
 			heading = bno055_getVectorEuler().x;
@@ -765,6 +776,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 
         else if (rx_data_6 == '4') { // 라이트턴
         	HAL_TIM_Base_Stop_IT(&htim4);
+        	stop_sent = 0;
         	Left_flag = 0;
             Right_flag = 1;
             heading = bno055_getVectorEuler().x;
@@ -820,8 +832,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
     else if (huart->Instance == USART3) {
         if (rx_data_3 == '1') {
             IR_flag = 1;
-            sprintf((char *)serialBuf, "1");
-            HAL_UART_Transmit(&huart3, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
+            sprintf((char *)serialBuf, "4");
+            HAL_UART_Transmit(&huart6, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
         }
 
         else if (rx_data_3 == '2') {
