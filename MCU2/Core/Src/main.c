@@ -70,8 +70,6 @@
      {led_1_GPIO_Port, led_1_Pin},
      {led_2_GPIO_Port, led_2_Pin},
      {led_3_GPIO_Port, led_3_Pin},
-     {led_4_GPIO_Port, led_4_Pin},
-     {led_5_GPIO_Port, led_5_Pin},
      {led_6_GPIO_Port, led_6_Pin},
      {led_7_GPIO_Port, led_7_Pin},
      {led_8_GPIO_Port, led_8_Pin}
@@ -122,6 +120,7 @@ int main(void)
   MX_I2C1_Init();
   MX_ADC1_Init();
   MX_TIM2_Init();
+  MX_TIM4_Init();
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 //  tm1637Init();
@@ -132,17 +131,20 @@ int main(void)
     // Display the value "1234" and turn on the `:` that is between digits 2 and 3.
 
   ///////////////////////////////////////////////////////////////
-//  HAL_ADC_Start_IT(&hadc1);
+  HAL_ADC_Start_IT(&hadc1);
+
 //  LCD_I2C_Init();
 //
 //  LCD_I2C_Clear();
 //  LCD_I2C_WriteText(1, 1, "start");
 //  HAL_Delay(1000);
-//
+
 //  int8_t coin = 0;
 //  MFRC522_Init();
   /////////////////////////////////////////////////////////////////
-  HAL_TIM_Base_Start(&htim2);
+//  HAL_TIM_Base_Start(&htim2);
+//	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);
+
 //
 //  stepCV(256, 1000);  // 반바퀴, 스텝당 2ms (안정적)
 //  HAL_Delay(10);
@@ -165,7 +167,7 @@ int main(void)
 //	      HAL_Delay(10);
 //	  }
 /////////////////////////////////////////////////////////////////////////
-//	  	  HAL_ADC_Start(&hadc1);
+//
 //	  	if (HAL_ADC_PollForConversion(&hadc1, 10) == HAL_OK) {
 //	  		adcValue = HAL_ADC_GetValue(&hadc1);   // 최신 변환 값 읽기
 //	  	}
@@ -282,7 +284,23 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
+    if (hadc->Instance == ADC1) {
+    	  uint32_t v = HAL_ADC_GetValue(hadc);   // 최신 ADC 값 읽기
+    	    int level = (v * 8) / 4096;            // v로 바로 LED 단계 계산
 
+    	    for (int i = 0; i < 8; i++) {
+    	        if (i < level) {
+    	            HAL_GPIO_WritePin(LEDs[i].Port, LEDs[i].Pin, GPIO_PIN_SET);
+
+
+    	        } else {
+    	            HAL_GPIO_WritePin(LEDs[i].Port, LEDs[i].Pin, GPIO_PIN_RESET);
+    	        }
+    	    }
+
+    }
+}
 /* USER CODE END 4 */
 
 /**

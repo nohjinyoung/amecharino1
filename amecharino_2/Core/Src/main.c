@@ -192,7 +192,6 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-      HAL_TIM_Base_Start_IT(&htim3);
 
 
 	  if (IR_flag == 1) {

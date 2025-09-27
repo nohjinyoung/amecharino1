@@ -10,27 +10,27 @@
 #define LCD_DELAY_MS 5
 
 extern I2C_HandleTypeDef hi2c1;
-extern UART_HandleTypeDef huart3;
+//extern UART_HandleTypeDef huart3;
 
 
-void I2C_Scan() {
-    char info[] = "Scanning I2C bus...\r\n";
-    HAL_UART_Transmit(&huart3, (uint8_t*)info, strlen(info), HAL_MAX_DELAY);
-
-    HAL_StatusTypeDef res;
-    for(uint16_t i = 0; i < 128; i++) {
-        res = HAL_I2C_IsDeviceReady(&hi2c1, i << 1, 1, 10);
-        if(res == HAL_OK) {
-            char msg[64];
-            snprintf(msg, sizeof(msg), "0x%02X", i);
-            HAL_UART_Transmit(&huart3, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
-        } else {
-            HAL_UART_Transmit(&huart3, (uint8_t*)".", 1, HAL_MAX_DELAY);
-        }
-    }
-
-    HAL_UART_Transmit(&huart3, (uint8_t*)"\r\n", 2, HAL_MAX_DELAY);
-}
+//void I2C_Scan() {
+//    char info[] = "Scanning I2C bus...\r\n";
+//    HAL_UART_Transmit(&huart3, (uint8_t*)info, strlen(info), HAL_MAX_DELAY);
+//
+//    HAL_StatusTypeDef res;
+//    for(uint16_t i = 0; i < 128; i++) {
+//        res = HAL_I2C_IsDeviceReady(&hi2c1, i << 1, 1, 10);
+//        if(res == HAL_OK) {
+//            char msg[64];
+//            snprintf(msg, sizeof(msg), "0x%02X", i);
+//            HAL_UART_Transmit(&huart3, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+//        } else {
+//            HAL_UART_Transmit(&huart3, (uint8_t*)".", 1, HAL_MAX_DELAY);
+//        }
+//    }
+//
+//    HAL_UART_Transmit(&huart3, (uint8_t*)"\r\n", 2, HAL_MAX_DELAY);
+//}
 
 HAL_StatusTypeDef LCD_SendInternal(uint8_t lcd_addr, uint8_t data, uint8_t flags) {
     HAL_StatusTypeDef res;
