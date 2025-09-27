@@ -423,22 +423,22 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 
       sprintf((char *)serialBuf, "6");
       HAL_UART_Transmit(&huart6, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
-      // sprintf((char *)serialBuf, "6"); //Tim4 start
-      // HAL_UART_Transmit(&huart7, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
 
     } else if (rx_data_3 == '3') {
       sprintf((char*)serialBuf, "3");
       HAL_UART_Transmit(&huart6, serialBuf, strlen((char*)serialBuf), HAL_MAX_DELAY);
 
       if (Lifting_check == 1) {
-        vx_value = -70.0f;
-      } else {
-        vx_value = -50.0f;
-      }
-      left_turn_flag  = 1;
-      forward_flag    = 0;
-      backward_flag   = 0;
-      right_turn_flag = 0;
+ 	  mecanum_drive(0.0f, -70.0f, 0.0f);  // 속도 유지
+
+       } else {
+         vx_value = -50.0f;
+         left_turn_flag  = 1;
+ 		forward_flag    = 0;
+ 		backward_flag   = 0;
+ 		right_turn_flag = 0;
+       }
+
 
       // Left_turn();
 
@@ -447,14 +447,15 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
       HAL_UART_Transmit(&huart6, serialBuf, strlen((char*)serialBuf), HAL_MAX_DELAY);
 
       if (Lifting_check == 1) {
-        vx_value = 70.0f;
+	  mecanum_drive(0.0f, 70.0f, 0.0f);  // 속도 유지
+
       } else {
         vx_value = 50.0f;
+        left_turn_flag  = 0;
+		forward_flag    = 0;
+		backward_flag   = 0;
+		right_turn_flag = 1;
       }
-      left_turn_flag  = 0;
-      forward_flag    = 0;
-      backward_flag   = 0;
-      right_turn_flag = 1;
 
     } else if (rx_data_3 == '5') {
       Left();
@@ -492,12 +493,15 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
       left_turn_flag  = 0;
       vx_value        = 0.0f;
 
-      sprintf((char*)serialBuf, "7");
-      HAL_UART_Transmit(&huart6, serialBuf, strlen((char*)serialBuf), HAL_MAX_DELAY);
       Motor_Init();
       Linear_Stop();
       mecanum_drive(0.0f, 0.0f, 0.0f);
       Stop();
+
+
+      sprintf((char*)serialBuf, "7");
+      HAL_UART_Transmit(&huart6, serialBuf, strlen((char*)serialBuf), HAL_MAX_DELAY);
+
     }
 
     HAL_UART_Receive_IT(&huart3, &rx_data_3, 1);
@@ -538,34 +542,24 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
       forward_flag     = 0;
       backward_flag    = 0;
       left_turn_flag   = 0;
-      mecanum_drive(0.0f, 0.0f, 0.0f);
 
       if (Lifting_check == 1) {
-        mecanum_drive(0.0f, -30.0f, 0.0f);
+        mecanum_drive(0.0f, -40.0f, 0.0f);
       } else {
-        TIM2->CCR1 = 70;
-        TIM2->CCR2 = 70;
-        TIM2->CCR3 = 70;
-        TIM2->CCR4 = 70;
-        Left_turn();
+    	mecanum_drive(0.0f, -30.0f, 0.0f);
       }
 
     } else if (rx_data_6 == '6') {
-      right_turn_flag  = 0;
-      forward_flag     = 0;
-      backward_flag    = 0;
-      left_turn_flag   = 0;
-      mecanum_drive(0.0f, 0.0f, 0.0f);
+        right_turn_flag  = 0;
+        forward_flag     = 0;
+        backward_flag    = 0;
+        left_turn_flag   = 0;
 
-      if (Lifting_check == 1) {
-        mecanum_drive(0.0f, 30.0f, 0.0f);
-      } else {
-        TIM2->CCR1 = 70;
-        TIM2->CCR2 = 70;
-        TIM2->CCR3 = 70;
-        TIM2->CCR4 = 70;
-        Right_turn();
-      }
+        if (Lifting_check == 1) {
+          mecanum_drive(0.0f, 40.0f, 0.0f);
+        } else {
+      	mecanum_drive(0.0f, 30.0f, 0.0f);
+        }
 
     } else if (rx_data_6 == '7') {
       right_turn_flag  = 0;
@@ -575,8 +569,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
       mecanum_drive(-50.0f, 0.0f, 0.0f);
 
     } else if (rx_data_6 == '8') {
-      forward_flag  = 0;
-      backward_flag = 0;
+        right_turn_flag  = 0;
+		forward_flag     = 0;
+		backward_flag    = 0;
+		left_turn_flag   = 0;
       mecanum_drive(50.0f, 0.0f, 0.0f);
 
     } else if (rx_data_6 == '9') { // 서보모터 닫기

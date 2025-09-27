@@ -74,8 +74,12 @@ uint8_t serialBuf[100];
 uint8_t IR_flag = 0;
 float heading = 0.0f;
 uint8_t heading_initialized = 0;
-float delta = 0.0f;
+float delta_3 = 0.0f;
+float delta_4 = 0.0f;
+
 float raw = 0.0f;
+float raw_3 = 0.0f;
+float raw_4 = 0.0f;
 float Tim3_raw = 0.0f;
 float Tim4_raw = 0.0f;
 uint8_t delta_count = 0;
@@ -181,14 +185,13 @@ int main(void)
   sprintf(msgBuffer, "VL53L0X start \r\n");
   	HAL_UART_Transmit(&huart3, (uint8_t*) msgBuffer, strlen(msgBuffer), 50);
 
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
+      HAL_TIM_Base_Start_IT(&htim3);
 
 
 	  if (IR_flag == 1) {
@@ -658,34 +661,28 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
     if (htim->Instance == TIM3)	//회전 각도 값 받아오기
     {
         bno055_vector_t v = bno055_getVectorEuler();
-        raw = v.x - heading;
+        raw_3 = v.x - heading;
 
         // -180 ~ 180 범위로 보정
-        if (raw > 180.0f)
-            raw -= 360.0f;
-        else if (raw < -180.0f)
-            raw += 360.0f;
+        if (raw_3 > 180.0f)
+            raw_3 -= 360.0f;
+        else if (raw_3 < -180.0f)
+            raw_3 += 360.0f;
 
-        delta = fabsf(raw);
+        delta_3 = fabsf(raw_3);
 
-        sprintf((char *)serialBuf, "heading = %.2f, v.x = %.2f, delta = %.2f\r\n", heading, v.x, delta);
+        sprintf((char *)serialBuf, "heading = %.2f, v.x = %.2f, delta = %.2f\r\n", heading, v.x, delta_3);
         HAL_UART_Transmit(&huart3, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
 
         // 멈춤 조건: 방향 상관없이 90도 이상 회전 시
-        if (delta >= 89.1f) {
+        if (delta_3 >= 89.1f) {
             delta_count++;
         }
 
         if (delta_count >= 2) {
-            tim4_initialized = 0;
             HAL_TIM_Base_Stop_IT(&htim3);
-            // HAL_TIM_Base_Start_IT(&htim4);
-            Tim3_raw = raw;
              Left_flag = 0;
              Right_flag = 0;
-
-            sprintf((char *)serialBuf, " 회전 90도 완료 (delta=%.2f)\r\n", delta);
-            HAL_UART_Transmit(&huart3, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
 
             sprintf((char *)serialBuf, "4");	//동작 정지 신
             HAL_UART_Transmit(&huart6, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
@@ -696,33 +693,30 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
     else if (htim->Instance == TIM4) {	//주행중 각도 보정
         bno055_vector_t v = bno055_getVectorEuler();
-         raw = v.x - heading;
+         raw_4 = v.x - heading;
 
-        if (tim4_initialized != 1) {
-            Tim4_raw = raw; // 현재 delta 계산
-            tim4_initialized = 1;
-            return;
-        }
+         if (raw_4 > 180.0f)
+             raw_4 -= 360.0f;
+         else if (raw_4 < -180.0f)
+             raw_4 += 360.0f;
 
-        float diff = Tim4_raw - raw;
-        if (diff > 180.0f) diff -= 360.0f;
-        else if (diff < -180.0f) diff += 360.0f;
+         delta_4 = raw_4;
 
-        sprintf((char *)serialBuf, "diff=%.2f\r\n", diff);
+        sprintf((char *)serialBuf, "raw = %.2f\r\n", delta_4);
         HAL_UART_Transmit(&huart3, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
 
         if (correcting_direction == 0) {
-            if (diff >= 1.2f) { // 오른쪽으로 휨
-                sprintf((char *)serialBuf, "6"); // 왼쪽 회전 시작
+            if (delta_4 >= 1.5f) { // 오른쪽으로 휨
+                sprintf((char *)serialBuf, "5"); // 왼쪽 회전 시작
                 HAL_UART_Transmit(&huart6, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
                 correcting_direction = 1;
-            } else if (diff <= -1.2f) { // 왼쪽으로 휨
-                sprintf((char *)serialBuf, "5"); // 오른쪽 회전 시작
+            } else if (delta_4 <= -1.5f) { // 왼쪽으로 휨
+                sprintf((char *)serialBuf, "6"); // 오른쪽 회전 시작
                 HAL_UART_Transmit(&huart6, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
                 correcting_direction = 2;
             }
         } else if (correcting_direction == 1) { // 오른쪽 회전 중
-            if (diff <= 0.5f) {
+            if (delta_4 <= 0.5f) {
                 if (Forward_flag == 1) {
                     sprintf((char *)serialBuf, "7"); // 다음 명령(전진)
                     HAL_UART_Transmit(&huart6, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
@@ -734,7 +728,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
                 }
             }
         } else if (correcting_direction == 2) { // 왼쪽 회전 중
-            if (diff >= -0.5f) {
+            if (delta_4 >= -0.5f) {
                 if (Forward_flag == 1) {
                     sprintf((char *)serialBuf, "7"); // 다음 명령(전진)
                     HAL_UART_Transmit(&huart6, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
@@ -762,36 +756,53 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
         }
 
         else if (rx_data_6 == '3') { // 레프트턴
+        	HAL_TIM_Base_Stop_IT(&htim4);
             Left_flag = 1;
-			  Right_flag = 0;
-			  heading = bno055_getVectorEuler().x;
-			HAL_TIM_Base_Stop_IT(&htim4);
-			  HAL_TIM_Base_Start_IT(&htim3);
-
+			Right_flag = 0;
+			heading = bno055_getVectorEuler().x;
+			HAL_TIM_Base_Start_IT(&htim3);
         }
 
         else if (rx_data_6 == '4') { // 라이트턴
-            Left_flag = 0;
+        	HAL_TIM_Base_Stop_IT(&htim4);
+        	Left_flag = 0;
             Right_flag = 1;
             heading = bno055_getVectorEuler().x;
-        	HAL_TIM_Base_Stop_IT(&htim4);
             HAL_TIM_Base_Start_IT(&htim3);
         }
 
         else if (rx_data_6 == '5') {
             Forward_flag = 1;
             Backward_flag = 0;
+			heading = bno055_getVectorEuler().x;
             HAL_TIM_Base_Start_IT(&htim4);
         }
 
         else if (rx_data_6 == '6') {
             Forward_flag = 0;
             Backward_flag = 1;
+			heading = bno055_getVectorEuler().x;
             HAL_TIM_Base_Start_IT(&htim4);
         }
 
         else if (rx_data_6 == '7') {
         	HAL_TIM_Base_Stop_IT(&htim4);
+        	HAL_TIM_Base_Stop_IT(&htim3);
+
+		// 회전 변수 초기화
+			delta_count = 0;
+			raw_3 = 0.0f;
+			Left_flag = 0;
+			Right_flag = 0;
+
+			// 보정 변수 초기화
+			correcting_direction = 0;
+			raw_4 = 0.0f;
+			Forward_flag = 0;
+			Backward_flag = 0;
+
+			// 공통 delta도 초기화
+			delta_3 = 0.0f;
         }
 
         else if (rx_data_6 == '8') {
