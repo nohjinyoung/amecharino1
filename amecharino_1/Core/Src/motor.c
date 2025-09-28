@@ -80,10 +80,10 @@ void Left()
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3); //3
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4); //4
 
-	TIM2->CCR1 = 70;
-	TIM2->CCR2 = 70;
-	TIM2->CCR3 = 70;
-	TIM2->CCR4 = 70;
+	TIM2->CCR1 = 80;
+	TIM2->CCR2 = 80;
+	TIM2->CCR3 = 80;
+	TIM2->CCR4 = 80;
 }
 
 void Right()
@@ -98,10 +98,10 @@ void Right()
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3); //3
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4); //4
 
-	TIM2->CCR1 = 70;
-	TIM2->CCR2 = 70;
-	TIM2->CCR3 = 70;
-	TIM2->CCR4 = 70;
+	TIM2->CCR1 = 80;
+	TIM2->CCR2 = 80;
+	TIM2->CCR3 = 80;
+	TIM2->CCR4 = 80;
 }
 
 void Right_turn()

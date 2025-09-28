@@ -196,7 +196,7 @@ int main(void)
       }
       mecanum_drive(0.0f, vx_value, 0.0f); // -방향 = Left turn
       if (Lifting_check == 0) {
-        HAL_Delay(170); // 부드럽게 감속
+        HAL_Delay(200); // 부드럽게 감속
       } else {
         HAL_Delay(350);
       }
@@ -211,7 +211,7 @@ int main(void)
       }
       mecanum_drive(0.0f, vx_value, 0.0f); // -방향 = Left turn
       if (Lifting_check == 0) {
-        HAL_Delay(170); // 부드럽게 감속
+        HAL_Delay(200); // 부드럽게 감속
       } else {
         HAL_Delay(350);
       }
@@ -430,7 +430,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
     	  	TIM2->CCR4 = 25;
 
        } else {
-         vx_value = -50.0f;
+         vx_value = -40.0f;
          left_turn_flag  = 1;
  		forward_flag    = 0;
  		backward_flag   = 0;
@@ -460,7 +460,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
         	  	TIM2->CCR4 = 30;
 
       } else {
-        vx_value = 50.0f;
+        vx_value = 40.0f;
         left_turn_flag  = 0;
 		forward_flag    = 0;
 		backward_flag   = 0;
@@ -472,6 +472,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
         backward_flag   = 0;
         right_turn_flag = 0;
         left_turn_flag  = 0;
+
         Left();
 
     } else if (rx_data_3 == '6') {
@@ -479,6 +480,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
         backward_flag   = 0;
         right_turn_flag = 0;
         left_turn_flag  = 0;
+
         Right();
 
     } else if (rx_data_3 == '7') {

@@ -60,20 +60,72 @@
 
 /* USER CODE BEGIN PV */
  uint32_t adcValue = 0;
+ uint8_t coin = 0;
+ uint8_t btn_pressed = 0;	//버튼 누름 여부
+ uint32_t pwm_value = 60; 	// 낮을수록 세짐
+ uint32_t balance = 10000;   // 카드 초기 금액
+ uint8_t used = 0;
+ uint16_t step_angle = 200;
+ uint8_t level_led = 0;
+ uint16_t segment_num = 0;
+ float temperature = 0.0f;// 카드 사용 여부
+
+ char lcd_line1[16];
+ char lcd_line2[16];
  char buff[16];
+
  typedef struct {
      GPIO_TypeDef* Port;
      uint16_t Pin;
  } Led_t;
 
- Led_t LEDs[8] = {
+ typedef enum {
+     STATE_READY,
+     STATE_RUN,
+     STATE_FINISH
+ } SystemState;
+
+ SystemState sys_state = STATE_FINISH;
+
+ Led_t LEDs[3] = {
      {led_1_GPIO_Port, led_1_Pin},
      {led_2_GPIO_Port, led_2_Pin},
-     {led_3_GPIO_Port, led_3_Pin},
+     {led_3_GPIO_Port, led_3_Pin}
+ };
+
+ Led_t LEDs_2[3] = {
      {led_6_GPIO_Port, led_6_Pin},
      {led_7_GPIO_Port, led_7_Pin},
      {led_8_GPIO_Port, led_8_Pin}
  };
+
+ void update_leds(uint8_t level)
+ {
+     for (int i = 0; i < 3; i++) {
+         if (i < level)
+             HAL_GPIO_WritePin(LEDs_2[i].Port, LEDs_2[i].Pin, GPIO_PIN_SET);
+         else
+             HAL_GPIO_WritePin(LEDs_2[i].Port, LEDs_2[i].Pin, GPIO_PIN_RESET);
+     }
+ }
+
+ void update_Lcd()
+ {
+	 // LCD 갱신
+	 if (sys_state == STATE_READY) {
+		 sprintf(lcd_line1, " Rest:%lu RDY ", balance);
+	 }
+	 else if (sys_state == STATE_RUN) {
+		 sprintf(lcd_line1, "------RUN------");
+		 sprintf(lcd_line2, "               ");
+	 }
+	 else if (sys_state == STATE_FINISH) {
+		 sprintf(lcd_line1, "-----Start-----");
+		 sprintf(lcd_line2, "-----Start-----");
+	 }
+	 LCD_I2C_WriteText(1, 1, lcd_line1);
+	 LCD_I2C_WriteText(2, 1, lcd_line2);
+ }
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -123,28 +175,46 @@ int main(void)
   MX_TIM4_Init();
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
-//  tm1637Init();
-//  tm1637SetBrightness(8);
-//  tm1637DisplayDecimal(1234, 1);
+  MFRC522_Init();
+  tm1637Init();
+  tm1637SetBrightness(6);
+  tm1637DisplayDecimal(segment_num, 1);
 
 
     // Display the value "1234" and turn on the `:` that is between digits 2 and 3.
 
-  ///////////////////////////////////////////////////////////////
-  HAL_ADC_Start_IT(&hadc1);
-
-//  LCD_I2C_Init();
+//  ///////////////////////////////////////////////////////////////
+  HAL_ADC_Start(&hadc1);
 //
-//  LCD_I2C_Clear();
-//  LCD_I2C_WriteText(1, 1, "start");
-//  HAL_Delay(1000);
+  LCD_I2C_Init();
 
-//  int8_t coin = 0;
-//  MFRC522_Init();
+  LCD_I2C_Clear();
+
+
   /////////////////////////////////////////////////////////////////
-//  HAL_TIM_Base_Start(&htim2);
-//	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);
+  HAL_TIM_Base_Start(&htim2);
+//  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);	//DC모터
+//    TIM4 -> CCR4 = pwm_value;
 
+    sprintf(lcd_line1, "Cost:10000 ");
+	sprintf(lcd_line2, "Temp:    ");
+	 LCD_I2C_WriteText(1, 1, lcd_line1);
+	 LCD_I2C_WriteText(2, 1, lcd_line2);
+
+
+//  for (int i=0; i<=360; i+=5) {
+//  	      Stepper_rotate_absolute(5, 10, 0); // CW 1도
+//  	      HAL_Delay(10);
+//  	  }
+//  	  for (int i=0; i<=360; i+=5) {
+//  	      Stepper_rotate_absolute(5, 10, 1); // CCW 1도
+//  	      HAL_Delay(10);
+//  	  }
+
+
+
+//  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);	//DC모터
+//  TIM4 -> CCR4 = pwm_value;
 //
 //  stepCV(256, 1000);  // 반바퀴, 스텝당 2ms (안정적)
 //  HAL_Delay(10);
@@ -158,77 +228,59 @@ int main(void)
   while (1)
   {
 
-//	  for (int i=0; i<=360; i+=5) {
-//	      Stepper_rotate_absolute(5, 10, 0); // CW 1도
-//	      HAL_Delay(10);
-//	  }
-//	  for (int i=0; i<=360; i+=5) {
-//	      Stepper_rotate_absolute(5, 10, 1); // CCW 1도
-//	      HAL_Delay(10);
-//	  }
-/////////////////////////////////////////////////////////////////////////
-//
-//	  	if (HAL_ADC_PollForConversion(&hadc1, 10) == HAL_OK) {
-//	  		adcValue = HAL_ADC_GetValue(&hadc1);   // 최신 변환 값 읽기
-//	  	}
-//
-//	  int level = (adcValue * 8) / 4096;
-//	  for (int i = 0; i < 8; i++) {
-//			  if (i < level) {
-//				  HAL_GPIO_WritePin(LEDs[i].Port, LEDs[i].Pin, GPIO_PIN_SET);
-//
-//			  } else {
-//				  HAL_GPIO_WritePin(LEDs[i].Port, LEDs[i].Pin, GPIO_PIN_RESET);
-//
-//			  }
-//		  }
-//
-//		  HAL_Delay(50); // 깜박임 방지
-	  //////////////////////////////////////////////////////////////////////////////////////////////////
-//	  coin++;
-//	  sprintf(buff, "coin: %d", coin);
-//	  LCD_I2C_Clear();
-//	  LCD_I2C_WriteText(1, 1, buff);
-//	  HAL_Delay(1000);
-////////////////////////////////////////////////////////////////////////////////////
-//	    status = MFRC522_Request(PICC_REQIDL, str);
-//	    status = MFRC522_Anticoll(str);
-//	    memcpy(sNum, str, 5);
-//	    HAL_Delay(100);
-//	     if((str[0]==179) && (str[1]==158) && (str[2]==54) && (str[3]==250))
-//	     {
-//	       HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,0);
-//	       HAL_Delay(100);
-//	       }
-//	     else if((str[0]==83) && (str[1]==136) && (str[2]==27) && (str[3]==42))
-//	       {
-//	       HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,0);
-//	       HAL_Delay(2000);
-//	     }
-//	     else
-//	     {
-//	       HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,1);
-//	     }
-///////////////////////////////////////////////////////////////////////////////
+	  if(sys_state != STATE_RUN)
+	  {
+			 status = MFRC522_Request(PICC_REQIDL, str);
+			 status = MFRC522_Anticoll(str);
+			 if (status == MI_OK) {
+				 memcpy(sNum, str, 5);
+				 balance -= 1000;         // 차감
+				 segment_num += 10;
+				 tm1637DisplayDecimal(segment_num, 1);
+				 sys_state = STATE_READY;   // 동작 상태 변경
+				 HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
 
-//
-//	  if(coin == 5)
-//	  {
-//	      HAL_GPIO_WritePin(led_1_GPIO_Port,led_1_Pin, 1);
-//	      HAL_Delay(1000);
-//	      HAL_GPIO_WritePin(led_2_GPIO_Port,led_2_Pin, 1);
-//	      HAL_Delay(1000);
-//	      HAL_GPIO_WritePin(led_3_GPIO_Port,led_3_Pin, 1);
-//	      HAL_Delay(1000);
-//	      HAL_GPIO_WritePin(led_4_GPIO_Port,led_4_Pin, 1);
-//	      HAL_Delay(1000);
-//	      HAL_GPIO_WritePin(led_5_GPIO_Port,led_5_Pin, 1);
-//	      HAL_Delay(1000);
-//	      HAL_GPIO_WritePin(led_6_GPIO_Port,led_6_Pin, 1);
-//	      HAL_Delay(1000);
-//	      HAL_GPIO_WritePin(led_7_GPIO_Port,led_7_Pin, 1);
-//	      HAL_Delay(1000);
-//	  }
+			 }
+	  }
+
+	  if(sys_state == STATE_READY)
+	  {
+	    if (HAL_ADC_PollForConversion(&hadc1, 10) == HAL_OK) {
+	        adcValue = HAL_ADC_GetValue(&hadc1);
+	        float voltage = (3.3f * adcValue) / 4095.0f;
+	        int temp_step = (((int)((voltage * 30.3f) + 0.1f)/ 10)) * 10;
+	        int level = ( adcValue * 3) / 4096 + 1;  // 0~3 단계
+	        if (level > 3) level = 3;
+
+			for (int i = 0; i < 3; i++) {
+				if (i < level)
+					HAL_GPIO_WritePin(LEDs[i].Port, LEDs[i].Pin, GPIO_PIN_SET);
+				else
+					HAL_GPIO_WritePin(LEDs[i].Port, LEDs[i].Pin, GPIO_PIN_RESET);
+
+
+			}
+
+			sprintf(lcd_line2, "Temp:%3dC      ", temp_step);
+			LCD_I2C_WriteText(2, 1, lcd_line2);
+	    }
+	  }
+	  else if(sys_state == STATE_RUN)
+	  {
+		  segment_num -= 1;
+		  tm1637DisplayDecimal(segment_num, 1);
+		  HAL_Delay(1000);
+		  if(!segment_num)
+		  {
+			  HAL_Delay(1000);
+			  sys_state = STATE_FINISH;
+		  }
+
+	  }
+
+	  update_Lcd();
+
+
 
     /* USER CODE END WHILE */
 
@@ -285,21 +337,111 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
-    if (hadc->Instance == ADC1) {
-    	  uint32_t v = HAL_ADC_GetValue(hadc);   // 최신 ADC 값 읽기
-    	    int level = (v * 8) / 4096;            // v로 바로 LED 단계 계산
+	if (hadc->Instance == ADC1) {
+//		adcValue = HAL_ADC_GetValue(&hadc1);
+//		float voltage = (3.3f * adcValue) / 4095.0f;
+//		temperature = voltage * 100.0f;  // 센서 보정 필요
+//		int level = ( adcValue * 3) / 4096;  // 0~3 단계
+//			for (int i = 0; i < 3; i++) {
+//				if (i < level)
+//					HAL_GPIO_WritePin(LEDs[i].Port, LEDs[i].Pin, GPIO_PIN_SET);
+//				else
+//					HAL_GPIO_WritePin(LEDs[i].Port, LEDs[i].Pin, GPIO_PIN_RESET);
+//			}
+//
+//			// LCD 두 번째 줄만 갱신
+//			if (sys_state == STATE_RUN)
+//				sprintf(lcd_line2, "Temp:%.1fC RUN", temperature);
+//			else if (sys_state == STATE_READY)
+//				sprintf(lcd_line2, "Temp:%.1fC Rdy", temperature);
+//			else if (sys_state == STATE_FINISH)
+//				sprintf(lcd_line2, "Temp:%.1fC Fin", temperature);
+//
+//			LCD_I2C_WriteText(2, 1, lcd_line2);
 
-    	    for (int i = 0; i < 8; i++) {
-    	        if (i < level) {
-    	            HAL_GPIO_WritePin(LEDs[i].Port, LEDs[i].Pin, GPIO_PIN_SET);
+	}
+}
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	if(sys_state == STATE_READY)
+	{
+	 if (GPIO_Pin == GPIO_PIN_8)
+	    {
+	        // 버튼이 눌릴 때(상승엣지)마다 실행
+
+		 	 if (level_led < 3) level_led++;   // 최대 3
+			 update_leds(level_led);
+			 pwm_value -= 10;
+			 if (pwm_value <= 40)
+				{
+					 pwm_value = 40;
+					HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+				}
+			TIM4->CCR4 = pwm_value;
+
+	    }
+	 else if (GPIO_Pin == GPIO_PIN_5)
+	 	 {
+	 	 	 if (level_led > 0) level_led--;   // 최소 0
+			 update_leds(level_led);
+			 pwm_value += 10;
+			 if (pwm_value >= 60)
+				{
+					 pwm_value = 60;
+					HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+				}
+			TIM4->CCR4 = pwm_value;
+
+		}
 
 
-    	        } else {
-    	            HAL_GPIO_WritePin(LEDs[i].Port, LEDs[i].Pin, GPIO_PIN_RESET);
-    	        }
-    	    }
+	 else if (GPIO_Pin == GPIO_PIN_2)
+		{
+			// 버튼이 눌릴 때(상승엣지)마다 실행
+			HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
 
-    }
+
+	        if (step_angle > 200) step_angle -= 100;  // 음수 방지
+	        else step_angle = 200; // 10도 줄임 (원하는 단위 각도)
+
+	        Stepper_rotate_absolute(5, step_angle, 0); // 모터 위치 이동
+
+		}
+	 else if (GPIO_Pin == GPIO_PIN_15)
+		{
+			// 버튼이 눌릴 때(상승엣지)마다 실행
+			HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+
+		   if (step_angle < 400) step_angle += 100;  // 음수 방지
+		   else step_angle = 400; // 10도 줄임 (원하는 단위 각도)
+
+		   Stepper_rotate_absolute(5, step_angle, 0); // 모터 위치 이동
+		}
+	}
+
+	 if (GPIO_Pin == GPIO_PIN_10)	//동작버튼
+		{
+			// 버튼이 눌릴 때(상승엣지)마다 실행
+			 if(sys_state == STATE_READY)
+			 {
+				  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);	//DC모터
+				  TIM4 -> CCR4 = pwm_value;
+				HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+				sys_state = STATE_RUN;
+			 }
+
+		}
+	 else if (GPIO_Pin == GPIO_PIN_11)	//종료 버튼
+		{
+				// 버튼이 눌릴 때(상승엣지)마다 실행
+			 if(sys_state != STATE_FINISH)
+			 {
+				HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+				sys_state = STATE_READY;
+			 }
+		}
+
+
 }
 /* USER CODE END 4 */
 

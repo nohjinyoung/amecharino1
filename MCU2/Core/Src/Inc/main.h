@@ -1,8 +1,9 @@
 /* USER CODE BEGIN Header */
 /**
   ******************************************************************************
-  * @file    stm32f1xx_it.h
-  * @brief   This file contains the headers of the interrupt handlers.
+  * @file           : main.h
+  * @brief          : Header for main.c file.
+  *                   This file contains the common defines of the application.
   ******************************************************************************
   * @attention
   *
@@ -18,12 +19,15 @@
 /* USER CODE END Header */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __STM32F1xx_IT_H
-#define __STM32F1xx_IT_H
+#ifndef __MAIN_H
+#define __MAIN_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/* Includes ------------------------------------------------------------------*/
+#include "stm32f1xx_hal.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -46,24 +50,40 @@ extern "C" {
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
-void NMI_Handler(void);
-void HardFault_Handler(void);
-void MemManage_Handler(void);
-void BusFault_Handler(void);
-void UsageFault_Handler(void);
-void SVC_Handler(void);
-void DebugMon_Handler(void);
-void PendSV_Handler(void);
-void SysTick_Handler(void);
-void ADC1_2_IRQHandler(void);
-void EXTI9_5_IRQHandler(void);
-void EXTI15_10_IRQHandler(void);
+void Error_Handler(void);
+
 /* USER CODE BEGIN EFP */
 
 /* USER CODE END EFP */
+
+/* Private defines -----------------------------------------------------------*/
+#define IN4_Pin GPIO_PIN_0
+#define IN4_GPIO_Port GPIOA
+#define IN3_Pin GPIO_PIN_1
+#define IN3_GPIO_Port GPIOA
+#define IN2_Pin GPIO_PIN_2
+#define IN2_GPIO_Port GPIOA
+#define led_1_Pin GPIO_PIN_12
+#define led_1_GPIO_Port GPIOB
+#define led_2_Pin GPIO_PIN_13
+#define led_2_GPIO_Port GPIOB
+#define led_3_Pin GPIO_PIN_14
+#define led_3_GPIO_Port GPIOB
+#define led_6_Pin GPIO_PIN_9
+#define led_6_GPIO_Port GPIOA
+#define led_7_Pin GPIO_PIN_10
+#define led_7_GPIO_Port GPIOA
+#define led_8_Pin GPIO_PIN_11
+#define led_8_GPIO_Port GPIOA
+#define IN1_Pin GPIO_PIN_3
+#define IN1_GPIO_Port GPIOB
+
+/* USER CODE BEGIN Private defines */
+
+/* USER CODE END Private defines */
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __STM32F1xx_IT_H */
+#endif /* __MAIN_H */
