@@ -159,14 +159,17 @@ void Motor_Init(){
 
 void Linear_Forward(void)
 {
-	TIM2->CCR1 = 90;
-	TIM2->CCR2 = 90;
+	TIM2->CCR1 = 95;
+	TIM2->CCR2 = 95;
 	HAL_GPIO_WritePin(GPIOF, GPIO_PIN_8,GPIO_PIN_RESET); //1 뒤쪽 우
 	HAL_GPIO_WritePin(GPIOF, GPIO_PIN_7,GPIO_PIN_SET);// 2 뒤쪽 좌
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1); //1
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2); //2
+	HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_3); //1
+	HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_4); //2
 
-	TIM9->CCR1 = 40;
+	TIM9->CCR1 = 30;
+	//	TIM9->CCR1 = 40;
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_SET);   // IN1
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_6, GPIO_PIN_RESET); // IN2
 
@@ -174,14 +177,16 @@ void Linear_Forward(void)
 
 void Linear_Backward(void)
 {
-	TIM2->CCR1 = 90;
-	TIM2->CCR2 = 90;
+	TIM2->CCR1 = 95;
+	TIM2->CCR2 = 95;
 	HAL_GPIO_WritePin(GPIOF, GPIO_PIN_8,GPIO_PIN_SET); //1 뒤쪽 우
 	HAL_GPIO_WritePin(GPIOF, GPIO_PIN_7,GPIO_PIN_RESET);// 2 뒤쪽 좌
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1); //1
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2); //2
+	HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_3); //1
+	HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_4); //2
 
-	TIM9->CCR1 = 40;
+	TIM9->CCR1 = 30;
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_RESET);   // IN1
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_6, GPIO_PIN_SET); // IN2
 }

@@ -196,7 +196,7 @@ int main(void)
       }
       mecanum_drive(0.0f, vx_value, 0.0f); // -방향 = Left turn
       if (Lifting_check == 0) {
-        HAL_Delay(200); // 부드럽게 감속
+        HAL_Delay(170); // 부드럽게 감속
       } else {
         HAL_Delay(350);
       }
@@ -211,7 +211,7 @@ int main(void)
       }
       mecanum_drive(0.0f, vx_value, 0.0f); // -방향 = Left turn
       if (Lifting_check == 0) {
-        HAL_Delay(200); // 부드럽게 감속
+        HAL_Delay(170); // 부드럽게 감속
       } else {
         HAL_Delay(350);
       }
@@ -244,7 +244,7 @@ int main(void)
           PCA9685_SetServoAngle(1, 125 + i); // 늘어나기
           PCA9685_SetServoAngle(2, 110 + i); // 늘어나기
           PCA9685_SetServoAngle(3, 113 - i); // 줄어들기
-          HAL_Delay(10);
+          HAL_Delay(9);
         }
         servo_open = 0;
 
@@ -430,7 +430,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
     	  	TIM2->CCR4 = 25;
 
        } else {
-         vx_value = -40.0f;
+         vx_value = -50.0f;
          left_turn_flag  = 1;
  		forward_flag    = 0;
  		backward_flag   = 0;
@@ -460,7 +460,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
         	  	TIM2->CCR4 = 30;
 
       } else {
-        vx_value = 40.0f;
+        vx_value = 50.0f;
         left_turn_flag  = 0;
 		forward_flag    = 0;
 		backward_flag   = 0;
@@ -523,6 +523,25 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
       HAL_UART_Transmit(&huart6, serialBuf, strlen((char*)serialBuf), HAL_MAX_DELAY);
 
     }
+
+    else if (rx_data_3 == 'z') {
+
+          sprintf((char*)serialBuf, "s");
+          HAL_UART_Transmit(&huart6, serialBuf, strlen((char*)serialBuf), HAL_MAX_DELAY);
+
+        }
+    else if (rx_data_3 == 'c') {
+
+             sprintf((char*)serialBuf, "c");
+             HAL_UART_Transmit(&huart6, serialBuf, strlen((char*)serialBuf), HAL_MAX_DELAY);
+
+           }
+    else if (rx_data_3 == 'x') {
+
+          sprintf((char*)serialBuf, "f");
+          HAL_UART_Transmit(&huart6, serialBuf, strlen((char*)serialBuf), HAL_MAX_DELAY);
+
+        }
 
     HAL_UART_Receive_IT(&huart3, &rx_data_3, 1);
 

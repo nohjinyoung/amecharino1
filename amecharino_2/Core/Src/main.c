@@ -87,6 +87,8 @@ uint8_t correcting_direction = 0;
 uint8_t tim4_initialized = 0;
 uint8_t stop_sent = 0;
 uint8_t  Lifting_check = 0;
+float init_heading = 0.0f;      // s에서 저장한 초기 heading
+uint8_t return_mode = 0;        // f 동작으로 초기값 복귀 모드
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -216,7 +218,7 @@ int main(void)
  	          PCA9685_SetServoAngle(1, 110 + i);
  	          PCA9685_SetServoAngle(2, 115 + i);
  	          PCA9685_SetServoAngle(3, 117 - i);
-	          HAL_Delay(8);
+	          HAL_Delay(10);
 	      }
 
 	      Servo_open = 0;
@@ -234,7 +236,7 @@ int main(void)
 			  PCA9685_SetServoAngle(1, 205 -  i);
 			  PCA9685_SetServoAngle(2, 210 - i);
 			  PCA9685_SetServoAngle(3, 22 + i);
-			  HAL_Delay(8);
+			  HAL_Delay(10);
 	      }
 
 	      Servo_close = 0;
@@ -717,45 +719,67 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
              raw_4 += 360.0f;
 
          delta_4 = raw_4;
+         if (return_mode == 0) {
+//        sprintf((char *)serialBuf, "raw = %.2f\r\n", delta_4);
+//        HAL_UART_Transmit(&huart3, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
 
-        sprintf((char *)serialBuf, "raw = %.2f\r\n", delta_4);
-        HAL_UART_Transmit(&huart3, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
+			if (correcting_direction == 0) {
+				if (delta_4 >= 1.2f) { // 오른쪽으로 휨
+					sprintf((char *)serialBuf, "5"); // 왼쪽 회전 시작
+					HAL_UART_Transmit(&huart6, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
+					correcting_direction = 1;
+				} else if (delta_4 <= -1.2f) { // 왼쪽으로 휨
+					sprintf((char *)serialBuf, "6"); // 오른쪽 회전 시작
+					HAL_UART_Transmit(&huart6, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
+					correcting_direction = 2;
+				}
+			} else if (correcting_direction == 1) { // 오른쪽 회전 중
+				if (delta_4 <= 0.3f) {
+					if (Forward_flag == 1) {
+						sprintf((char *)serialBuf, "7"); // 다음 명령(전진)
+						HAL_UART_Transmit(&huart6, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
+						correcting_direction = 0; // 상태 초기화
+					} else if (Backward_flag == 1) {
+						sprintf((char *)serialBuf, "8"); // 다음 명령(후진)
+						HAL_UART_Transmit(&huart6, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
+						correcting_direction = 0; // 상태 초기화
+					}
+				}
+			} else if (correcting_direction == 2) { // 왼쪽 회전 중
+				if (delta_4 >= -0.3f) {
+					if (Forward_flag == 1) {
+						sprintf((char *)serialBuf, "7"); // 다음 명령(전진)
+						HAL_UART_Transmit(&huart6, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
+						correcting_direction = 0; // 상태 초기화
+					} else if (Backward_flag == 1) {
+						sprintf((char *)serialBuf, "8"); // 다음 명령(후진)
+						HAL_UART_Transmit(&huart6, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
+						correcting_direction = 0; // 상태 초기화
+					}
+				}
+			}
+         }
+	 else if (return_mode == 1) {
+			 /* ===== f: 초기 heading으로 복귀 ===== */
+			 float delta = raw_4;
 
-        if (correcting_direction == 0) {
-            if (delta_4 >= 1.2f) { // 오른쪽으로 휨
-                sprintf((char *)serialBuf, "5"); // 왼쪽 회전 시작
-                HAL_UART_Transmit(&huart6, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
-                correcting_direction = 1;
-            } else if (delta_4 <= -1.2f) { // 왼쪽으로 휨
-                sprintf((char *)serialBuf, "6"); // 오른쪽 회전 시작
-                HAL_UART_Transmit(&huart6, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
-                correcting_direction = 2;
-            }
-        } else if (correcting_direction == 1) { // 오른쪽 회전 중
-            if (delta_4 <= 0.3f) {
-                if (Forward_flag == 1) {
-                    sprintf((char *)serialBuf, "7"); // 다음 명령(전진)
-                    HAL_UART_Transmit(&huart6, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
-                    correcting_direction = 0; // 상태 초기화
-                } else if (Backward_flag == 1) {
-                    sprintf((char *)serialBuf, "8"); // 다음 명령(후진)
-                    HAL_UART_Transmit(&huart6, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
-                    correcting_direction = 0; // 상태 초기화
-                }
-            }
-        } else if (correcting_direction == 2) { // 왼쪽 회전 중
-            if (delta_4 >= -0.3f) {
-                if (Forward_flag == 1) {
-                    sprintf((char *)serialBuf, "7"); // 다음 명령(전진)
-                    HAL_UART_Transmit(&huart6, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
-                    correcting_direction = 0; // 상태 초기화
-                } else if (Backward_flag == 1) {
-                    sprintf((char *)serialBuf, "8"); // 다음 명령(후진)
-                    HAL_UART_Transmit(&huart6, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
-                    correcting_direction = 0; // 상태 초기화
-                }
-            }
-        }
+			 if (fabsf(delta) < 0.5f) {
+				 // 오차 1도 이내 → 복귀 완료
+				 sprintf((char *)serialBuf, "4"); // 다음 명령(후진)
+				 HAL_UART_Transmit(&huart6, serialBuf, strlen((char *)serialBuf), HAL_MAX_DELAY);
+
+				 HAL_TIM_Base_Stop_IT(&htim4);
+				 return_mode = 0;  // 모드 종료
+			 } else {
+				 if (delta > 0) {
+					 sprintf((char*)serialBuf, "5"); // 왼쪽으로 회전
+					 HAL_UART_Transmit(&huart6, serialBuf, strlen((char*)serialBuf), HAL_MAX_DELAY);
+				 } else {
+					 sprintf((char*)serialBuf, "6"); // 오른쪽으로 회전
+					 HAL_UART_Transmit(&huart6, serialBuf, strlen((char*)serialBuf), HAL_MAX_DELAY);
+				 }
+			 }
+		 }
     }
 
 }
@@ -830,6 +854,24 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
         else if (rx_data_6 == '9') {
         	Servo_open = 1;
         }
+        else if (rx_data_6 == 's') {
+            // 시뮬 시작 → 초기 heading 저장
+            bno055_vector_t v = bno055_getVectorEuler();
+            init_heading = v.x;
+            return_mode = 0;  // 보정 모드 아님
+
+        } else if (rx_data_6 == 'f') {
+            // 시뮬 종료 → 초기값 복귀 모드 진입
+            return_mode = 1;
+            heading = init_heading;   // TIM4에서 비교 기준으로 사용
+            HAL_TIM_Base_Start_IT(&htim4);  // 보정 타이머4 시작
+        }
+        else if (rx_data_6 == 'c') {
+		   // 시뮬 종료 → 초기값 복귀 모드 진입
+		   return_mode = 1;
+		   heading = init_heading + 180.0f;   // TIM4에서 비교 기준으로 사용
+		   HAL_TIM_Base_Start_IT(&htim4);  // 보정 타이머4 시작
+	   }
 
         // 다음 수신 대기
         HAL_UART_Receive_IT(&huart6, &rx_data_6, 1);
