@@ -66,6 +66,7 @@ uint8_t  distance;
 uint8_t  distancestr;
 uint8_t  start = 0;
 uint8_t ready = 0;
+uint8_t sent_l = 0;
 float    vx_value = 0.0f;
 
 volatile uint8_t Linear_flag      = 0;
@@ -217,9 +218,12 @@ int main(void)
       }
 
     } else if (Linear_flag == 1) {
-
-	  sprintf((char*)serialBuf, "l");  // L
-  	  HAL_UART_Transmit(&huart3, serialBuf, strlen((char*)serialBuf), HAL_MAX_DELAY);
+    	if(sent_l == 0)
+    	{
+		  sprintf((char*)serialBuf, "l");  // L
+		  HAL_UART_Transmit(&huart3, serialBuf, strlen((char*)serialBuf), HAL_MAX_DELAY);
+		  sent_l = 1;
+    	}
 
       Stop();
       Linear_Forward();
@@ -231,7 +235,7 @@ int main(void)
       }
       HAL_Delay(20);
 
-      if (ready && distancestr < 120) {
+      if (ready && distancestr < 180) {
     	ready = 0;
         Stop();
         Linear_Stop();
@@ -239,7 +243,7 @@ int main(void)
         sprintf((char*)serialBuf, "9");
         HAL_UART_Transmit(&huart6, serialBuf, strlen((char*)serialBuf), HAL_MAX_DELAY);
 
-        for (int i = 0; i <= 100; i++) {
+        for (int i = 0; i <= 102; i++) {
           PCA9685_SetServoAngle(0, 120 - i); // 줄어들기
           PCA9685_SetServoAngle(1, 125 + i); // 늘어나기
           PCA9685_SetServoAngle(2, 110 + i); // 늘어나기
@@ -257,6 +261,7 @@ int main(void)
 
         Lifting_check = 1;
         Linear_flag   = 0;
+        sent_l = 0;
       }
 
     } else if (Linear_back_flag == 1) {
@@ -285,11 +290,11 @@ int main(void)
       }
 
     } else if (servo_close == 1) {
-      for (int i = 0; i <= 100; i++) {
-        PCA9685_SetServoAngle(0,  20 + i); // 줄어들기
-        PCA9685_SetServoAngle(1, 225 - i); // 늘어나기
-        PCA9685_SetServoAngle(2, 210 - i); // 늘어나기
-        PCA9685_SetServoAngle(3,  13 + i); // 줄어들기
+      for (int i = 0; i <= 102; i++) {
+        PCA9685_SetServoAngle(0,  18 + i); // 줄어들기
+        PCA9685_SetServoAngle(1, 227 - i); // 늘어나기
+        PCA9685_SetServoAngle(2, 212 - i); // 늘어나기
+        PCA9685_SetServoAngle(3,  11 + i); // 줄어들기
         HAL_Delay(10);
       }
 
@@ -298,7 +303,7 @@ int main(void)
       Linear_back_flag = 1;
 
     } else if (servo_open == 1) {
-      for (int i = 0; i <= 100; i++) {
+      for (int i = 0; i <= 102; i++) {
         PCA9685_SetServoAngle(0, 120 - i); // 줄어들기
         PCA9685_SetServoAngle(1, 125 + i); // 늘어나기
         PCA9685_SetServoAngle(2, 110 + i); // 늘어나기

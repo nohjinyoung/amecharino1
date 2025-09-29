@@ -212,7 +212,7 @@ int main(void)
 	  else if (Servo_open == 1) {
 
 
-	      for (i = 0; i <= 95; i++) {
+	      for (i = 0; i <= 97; i++) {
 
  	          PCA9685_SetServoAngle(0, 123 - i);
  	          PCA9685_SetServoAngle(1, 110 + i);
@@ -230,12 +230,12 @@ int main(void)
 
 	  else if (Servo_close == 1) {
 
-	      for (i = 0; i <= 95; i++) {
+	      for (i = 0; i <= 97; i++) {
 
-	          PCA9685_SetServoAngle(0, 28 + i);
-			  PCA9685_SetServoAngle(1, 205 -  i);
-			  PCA9685_SetServoAngle(2, 210 - i);
-			  PCA9685_SetServoAngle(3, 22 + i);
+	          PCA9685_SetServoAngle(0, 26 + i);
+			  PCA9685_SetServoAngle(1, 207 -  i);
+			  PCA9685_SetServoAngle(2, 212 - i);
+			  PCA9685_SetServoAngle(3, 20 + i);
 			  HAL_Delay(10);
 	      }
 
@@ -869,7 +869,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
         else if (rx_data_6 == 'c') {
 		   // 시뮬 종료 → 초기값 복귀 모드 진입
 		   return_mode = 1;
-		   heading = init_heading + 180.0f;   // TIM4에서 비교 기준으로 사용
+		   heading = init_heading + 185.0f;   // TIM4에서 비교 기준으로 사용
 		   HAL_TIM_Base_Start_IT(&htim4);  // 보정 타이머4 시작
 	   }
 
